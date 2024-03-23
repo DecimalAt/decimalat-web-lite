@@ -1,0 +1,36 @@
+.header-nav {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-item {
+    display: inline-block;
+    margin-right: 10px;
+}
+
+.navigation-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: inherit;
+    font-family: inherit;
+    color: #3c424299;
+    text-decoration: none;
+    padding: 12px;
+    margin: 0;
+    font-size: 16px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.navigation-button.active {
+    text-decoration: none;
+    color: black;
+}
+
+.navigation-button:hover {
+    text-decoration: none;
+    color: black;
+    /* Remove underline effect on hover */
+}

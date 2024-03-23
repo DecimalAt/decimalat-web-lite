@@ -1,0 +1,17 @@
+.side-panel {
+    width: 250px;
+    height: 100%;
+    background-color: white;
+    position: fixed;
+    top: 80px;
+    /* Adjust according to header height */
+    left: 0;
+    bottom: 0;
+    overflow-y: auto;
+    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Optional: Add additional styling for the content inside the side panel */
+.side-panel-content {
+    padding: 20px;
+}

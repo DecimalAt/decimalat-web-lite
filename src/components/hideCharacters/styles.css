@@ -1,0 +1,12 @@
+.hide-characters {
+    overflow: hidden;
+    white-space: nowrap;
+    color: dodgerblue;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.hidden-chars {
+    display: flex;
+    align-items: center;
+}

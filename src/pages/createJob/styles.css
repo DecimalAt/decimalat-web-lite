@@ -1,0 +1,117 @@
+.createJob {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-container {
+    min-width: 600px;
+    /* height: 420px; */
+    margin: 0 auto;
+    padding: 20px;
+    /* border: 1px solid #ccc; */
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    /* padding-bottom: 0; */
+}
+
+.form-group {
+    margin-bottom: 20px;
+    width: -webkit-fill-available;
+}
+
+.form-group label {
+    display: block;
+    font-weight: bold;
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="url"],
+.form-group input[type="number"],
+.form-group select {
+    width: -webkit-fill-available;
+    padding: 10px;
+    margin: 5px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="email"]:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="text"]:focus,
+.form-group input[type="email"]:focus,
+.form-group input[type="text"]:hover,
+.form-group input[type="email"]:hover {
+    transition: border-color 0.3s ease;
+}
+
+.form-group input[type="text"]::placeholder,
+.form-group input[type="email"]::placeholder {
+    color: #aaa;
+}
+
+.error-message {
+    color: #ff0000;
+    font-size: 14px;
+    margin-top: 5px;
+}
+
+.submit-button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    cursor: pointer;
+}
+
+.submit-button:hover {
+    background-color: #0056b3;
+}
+
+@media screen and (max-width: 600px) {
+    .form-container {
+        width: 90%;
+    }
+}
+
+.frequency {
+    display: flex;
+    column-gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.stepper {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    column-gap: 20px;
+}
+
+.stepper button {
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    background-color: #eee;
+    cursor: pointer;
+    width: -webkit-fill-available;
+    border-radius: 5px;
+}
+
+.stepper button.active {
+    background-color: #007bff;
+    /* Active step color */
+    color: #fff;
+}
+
+.spacer-horizontal {
+    margin-right: 10px;
+    margin-left: 10px;
+}

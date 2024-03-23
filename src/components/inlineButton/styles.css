@@ -1,0 +1,10 @@
+.inline-button {
+    background: none;
+    border: none;
+    color: #007bff;
+    /* Example color */
+    text-transform: uppercase;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+}

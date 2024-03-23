@@ -1,0 +1,15 @@
+.stepper button {
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    background-color: #eee;
+    cursor: pointer;
+    width: -webkit-fill-available;
+    border-radius: 5px;
+}
+
+.stepper button.active {
+    background-color: #007bff;
+    /* Active step color */
+    color: #fff;
+}
