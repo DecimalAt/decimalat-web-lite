@@ -26,7 +26,7 @@ import GlobalStyles from './themes/GlobalStyles';
 
 
 import Header from './components/header';
-import SidePanel from './components/sidePanel';
+// import SidePanel from './components/sidePanel';
 import Footer from './components/footer';
 
 import Home from './pages/home';

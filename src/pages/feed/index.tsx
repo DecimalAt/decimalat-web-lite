@@ -37,14 +37,14 @@ const filterOptions: Record<string, DocumentNode> = {
 const Feed: React.FC<FeedProps> = ({ jobs }) => {
     const account = useAccount();
     const [filter, setFilter] = useState<string>('All');
-    const [currentAddress, setCurrentAddress] = useState<string>(account.address || '');
+    // const [currentAddress, setCurrentAddress] = useState<string>(account.address || '');
 
     const handleFeedFilter = (selected: string) => {
         setFilter(selected);
     }
 
     const { loading, error, data } = useQuery(filterOptions[filter], {
-        variables: { address: currentAddress },
+        variables: { address: account.address },
     });
 
     if (loading) return <p>Loading...</p>;

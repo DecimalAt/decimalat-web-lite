@@ -1,12 +1,12 @@
-import React, { useState, FormEvent } from 'react';
-import { 
-    type BaseError, 
-    useSendTransaction, 
-    useWaitForTransactionReceipt, 
-    useAccount, 
+import React, { useState } from 'react';
+import {
+    type BaseError,
+    useSendTransaction,
+    useWaitForTransactionReceipt,
+    useAccount,
     useBalance,
-    useTransactionConfirmations,
-    useTransactionReceipt,
+    // useTransactionConfirmations,
+    // useTransactionReceipt,
 } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { type Hex, parseEther } from 'viem';

@@ -31,14 +31,14 @@ const filterOptions: Record<string, DocumentNode> = {
 const Jobs: React.FC<JobsProps> = ({ jobs }) => {
     const account = useAccount();
     const [filter, setFilter] = useState<string>('All');
-    const [currentAddress, setCurrentAddress] = useState<string>(account.address || '');
+    // const [currentAddress, setCurrentAddress] = useState<string>(account.address || '');
 
     const handleJobsFilter = (selected: string) => {
         setFilter(selected);
     }
 
     const { loading, error, data } = useQuery(filterOptions[filter], {
-        variables: { address: currentAddress },
+        variables: { address: account.address },
     });
 
 
