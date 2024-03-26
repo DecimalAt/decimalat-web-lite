@@ -9,10 +9,10 @@ import './styles.css';
 const StyledFooterContainer = styled.footer`
     background-color: ${(props) => props.theme.headerBackground};
     height: 110px;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    // position: fixed;
+    // bottom: 0;
+    // left: 0;
+    // right: 0;
     z-index: 1000;
     padding: 10px 50px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -24,7 +24,7 @@ const StyledFooterContainer = styled.footer`
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    padding-top: 20px;
+    // padding-top: 20px;
 `;
 
 const LightLogo = styled.img`

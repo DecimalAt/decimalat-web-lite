@@ -41,6 +41,7 @@
 .app {
   display: flex;
   height: 100vh;
+  flex-direction: column;
 }
 
 .main-content {
@@ -51,15 +52,16 @@
   margin-left: 250px; */
   flex: 1 1;
   padding: 20px;
-  overflow-y: auto;
+  /* overflow-y: auto; */
   margin-top: 80px;
   /* margin-left: 250px; */
   /* max-width: 1512px; */
   display: flex;
+  /* flex-direction: column; */
   justify-content: center;
   /* margin-left: auto;
   margin-right: auto; */
-  margin-bottom: 120px;
+  margin-bottom: 20px;
 }
 
 .content-item {

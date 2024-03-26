@@ -33,7 +33,7 @@ import Home from './pages/home';
 import Jobs from './pages/jobs';
 import Feed from './pages/feed';
 import History from './pages/history';
-import CreateJob from './pages/createJob';
+import CreateJob from './pages/createIntent';
 
 import './App.css';
 

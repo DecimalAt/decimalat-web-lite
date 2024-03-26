@@ -1,33 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     type BaseError,
     useSendTransaction,
     useWaitForTransactionReceipt,
     useAccount,
     useBalance,
-    // useTransactionConfirmations,
-    // useTransactionReceipt,
 } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { type Hex, parseEther } from 'viem';
+import { ethers } from 'ethers';
+import { erc20Abi } from 'viem';
 
-
+import InlineButton from '../../components/inlineButton';
+import { useEthersSigner } from '../../walletInteraction/ethers';
+import { decimalContractAddress, erc20USDC } from '../../walletInteraction/contractReference';
+import decimalAbiJson from '../../walletInteraction/decimal.abi';
 
 import './styles.css';
-import InlineButton from '../../components/inlineButton';
 
 const divStyle = {
     columnGap: '20px',
 };
 
+const CreateIntent: React.FC = () => {
 
-const CreateJob: React.FC = () => {
-    const account = useAccount();
-    const balance = useBalance({
-        address: account.address
-    });
-    const { data: hash, error, isPending, sendTransaction } = useSendTransaction();
-    // const { confirmations,  } = useTransactionConfirmations();
     const [enclaveImage, setEnclaveImage] = useState('');
     const [validatorContract, setValidatorContract] = useState('');
     const [address1, setAddress1] = useState('');
@@ -35,75 +31,128 @@ const CreateJob: React.FC = () => {
     const [frequencyValue, setFrequencyValue] = useState('');
     const [pricePerExecution, setPricePerExecution] = useState<number>(0);
     const [totalPrice, setTotalPrice] = useState<number>(0);
+    const [gasFee, setGasFee] = useState<number>(0);
     const [rewardsError, setRewardsError] = useState('');
     const [activeStep, setActiveStep] = useState(1);
     const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+    const [balanceOfUser, setBalanceOfUser] = useState(0);
+    const [allowance, setAllowance] = useState(0);
+    const [checkifApprovalRequired, setCheckifApprovalRequired] = useState(true);
+
+
+    const account = useAccount();
+    const balance = useBalance({ address: account?.address });
+    const { data: hash, error, isPending } = useSendTransaction();
+    const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash });
+    const signer = useEthersSigner({ chainId: account?.chain?.id });
+
+    let chain = account && account.chain ? account.chain.name?.toLowerCase().toString() : '';
+
+    useEffect(() => {
+        if (chain && signer) {
+            let contractOfUser = new ethers.Contract(erc20USDC[chain], erc20Abi, signer);
+            //To get the balance
+            contractOfUser && contractOfUser.balanceOf(account.address).then((resp) => {
+                setBalanceOfUser(Number(ethers.formatEther(resp)));
+            }, err => {
+                console.log(err);
+                setBalanceOfUser(0);
+            });
+            //To Check Allowance
+            contractOfUser && contractOfUser.allowance(account.address, decimalContractAddress[chain]).then((resp) => {
+                setAllowance(Number(ethers.formatEther(resp)));
+            }, err => {
+                console.log(err);
+                setAllowance(0);
+            });
+        }
+    }, [account]);
+
+    useEffect(() => {
+        if (allowance >= totalPrice) {
+            setCheckifApprovalRequired(false);
+            handleStepChange(2);
+            markStepComplete(1);
+        } else {
+            setCheckifApprovalRequired(true);
+            handleStepChange(1);
+            setCompletedSteps([]);
+        }
+    }, [allowance, totalPrice]);
 
     const handleValidatorContractChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedValue = e.target.value;
         setValidatorContract(selectedValue);
-        // You can perform additional logic based on the selected value here
     };
 
     const handleRewardsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setPricePerExecution(Number(event.target.value));
-        // Clear rewards error when rewards field changes
         setRewardsError('');
     };
 
-    // Function to handle step navigation
     const handleStepChange = (step: number) => {
         setActiveStep(step);
     };
 
-    // Function to handle marking steps as complete
     const markStepComplete = (step: number) => {
         if (!completedSteps.includes(step)) {
             setCompletedSteps([...completedSteps, step]);
         }
     };
 
-
-    async function submitTransaction(e: any) {
+    const submitForApproval = async (e: any) => {
         e.preventDefault();
-        const to = account.address as Hex;
-        const value = totalPrice.toString() as string;
-        sendTransaction({ to, value: parseEther(value) });
+        let contractOfDecimal;
+        if (chain && signer) {
+            contractOfDecimal = new ethers.Contract(decimalContractAddress[chain], erc20Abi, signer);
+            try {
+                const expoValue = totalPrice * (10 ** 9);
+                const resp = await contractOfDecimal.approve(decimalContractAddress[chain], expoValue);
+                console.log(resp);
+                handleStepChange(2);
+                markStepComplete(1);
+            } catch (err) {
+                console.log(err);
+            }
+        }
     }
 
-    const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
-        hash,
-    });
-
-    // if (isConfirmed) {
-    //     debugger
-    //     console.log(hash);
-    //     handleStepChange(1);
-    //     markStepComplete(1);
-    //     // TODO: Proceed to Allocate Rewards
-    // }
+    const handleMaxChainClick = () => {
+        setTotalPrice(Number(balanceOfUser));
+    }
 
     const handleMaxClick = () => {
-        setTotalPrice(Number(balance?.data?.formatted) || 0);
+        setGasFee(Number(balance?.data?.formatted));
     }
 
-    const handleAllocateRewards = (e: any) => {
-        // debugger
-        console.log(hash);
-        handleStepChange(2);
-        markStepComplete(2);
-    }
-
-
-    const handleSubmit = (event: React.FormEvent) => {
+    const handleSubmit = async (event: any) => {
         event.preventDefault();
-        // Perform validation on rewards field
         if (!pricePerExecution) {
             setRewardsError('Price per execution is required');
             return;
         }
-        // Submit the form
         console.log('Form submitted!');
+
+        let contractOfDecimal;
+        contractOfDecimal = new ethers.Contract(decimalContractAddress[chain], decimalAbiJson.abi, signer);
+
+        try {
+            const resp = await contractOfDecimal.createJob({
+                _validations: [],
+                _enclave_url: enclaveImage,
+                _pcrs: '',
+                _input: '',
+                _paymentPerExecution: pricePerExecution,
+                _maxBaseFee: 1,
+                _maxPriorityFee: 1,
+                _gasRefundAmount: 3,
+                _amount: totalPrice,
+                value: gasFee
+            });
+            console.log(resp);
+        } catch (err) {
+            console.log(err);
+        }
     };
 
     return (
@@ -131,7 +180,6 @@ const CreateJob: React.FC = () => {
                                 <select value={validatorContract} onChange={handleValidatorContractChange} required>
                                     <option value="">Select Validator Contract</option>
                                     <option value="Price Feed Oracle">Price Feed Oracle</option>
-                                    {/* Add more options as needed */}
                                 </select>
                             </div>
                             {validatorContract && (
@@ -168,7 +216,7 @@ const CreateJob: React.FC = () => {
                                 <div className='form-group'>
                                     <label>Rewards Per Execution:</label>
                                     <div className='frequency'>
-                                        <input type="number" value={pricePerExecution} onChange={handleRewardsChange} required />
+                                        <input type="number" min="0" value={pricePerExecution} onChange={handleRewardsChange} required />
                                         USDC
                                     </div>
                                     {<span style={{ color: 'transparent' }} className='error-message'>.</span>}
@@ -177,15 +225,15 @@ const CreateJob: React.FC = () => {
                                 <div className='form-group'>
                                     <label>Total Rewards:</label>
                                     <div className='frequency'>
-                                        <input name="totalPrice" type="number" value={totalPrice} onChange={(e) => setTotalPrice(Number(e.target.value))} required />
+                                        <input name="totalPrice" type="number" min="0" value={totalPrice} onChange={(e) => setTotalPrice(Number(e.target.value))} required />
                                         USDC
                                     </div>
                                     {
-                                        balance?.data &&
+                                        // balanceOfUser &&
                                         <>
-                                            <span style={{ color: '#eee', fontStyle: 'italic' }} className='error-message'>Balance: {balance.data.formatted} {balance.data.symbol} </span>
+                                            <span style={{ color: '#eee', fontStyle: 'italic' }} className='error-message'>Balance: {balanceOfUser} USDC </span>
                                             <span className='spacer-horizontal'>|</span>
-                                            <InlineButton onClick={handleMaxClick}>Max</InlineButton>
+                                            <InlineButton onClick={handleMaxChainClick}>Max</InlineButton>
                                         </>
                                     }
                                     {rewardsError && <span style={{ color: 'red' }} className='error-message'>{rewardsError}</span>}
@@ -199,25 +247,35 @@ const CreateJob: React.FC = () => {
                                 </i>
                             </div>
                             <div className="stepper">
-                                <button
-                                    className={activeStep === 1 ? 'active' : ''}
-                                    onClick={(e) => { submitTransaction(e) }}
-                                    disabled={isConfirming || isConfirmed}
-                                >
-                                    {isPending ? 'Approving...' : 'Approve Rewards'}
-                                </button>
-                                <button
-                                    className={activeStep === 2 ? 'active' : ''}
-                                    disabled={!completedSteps.includes(1)}
-                                    onClick={(e) => {
-                                        handleAllocateRewards(e);
-                                    }}
-                                >
-                                    Allocate Rewards
-                                </button>
+                                <div className='form-group'>
+                                    <button
+                                        className={activeStep === 1 ? 'active' : ''}
+                                        onClick={(e) => { submitForApproval(e) }}
+                                        disabled={totalPrice == 0 || !checkifApprovalRequired || isConfirming || isConfirmed}
+                                    >
+                                        {isPending ? 'Approving...' : 'Approve Rewards'}
+                                    </button>
+                                </div>
+                            </div>
+                            <div className='frequency' style={divStyle}>
+                                <div className='form-group'>
+                                    <label>Gas Fee:</label>
+                                    <div className='frequency'>
+                                        <input name="gasFee" type="number" value={gasFee} onChange={(e) => setGasFee(Number(e.target.value))} required />
+                                        Gwei
+                                    </div>
+                                    {
+                                        balance?.data &&
+                                        <>
+                                            <span style={{ color: '#eee', fontStyle: 'italic' }} className='error-message'>Balance: {balance.data.formatted} {balance.data.symbol} </span>
+                                            <span className='spacer-horizontal'>|</span>
+                                            <InlineButton onClick={handleMaxClick}>Max</InlineButton>
+                                        </>
+                                    }
+                                    {rewardsError && <span style={{ color: 'red' }} className='error-message'>{rewardsError}</span>}
+                                </div>
                             </div>
                             <br />
-                            {/* {hash && <div>Transaction Hash: {hash}</div>} */}
                             {isConfirming && <div>Waiting for Approval...</div>}
                             {isConfirmed && <div>Transaction Approved.</div>}
                             {error && (
@@ -226,25 +284,21 @@ const CreateJob: React.FC = () => {
                             <br />
                             <div className='stepper'>
                                 <button
-                                    className={activeStep === 3 ? 'active' : ''}
-                                    disabled={!completedSteps.includes(2)}
-                                    onClick={() => {
-                                        handleStepChange(3);
-                                        markStepComplete(3);
+                                    className={activeStep === 2 && totalPrice > 0 && allowance >= totalPrice ? 'active' : ''}
+                                    disabled={totalPrice == 0 || !completedSteps.includes(1) || allowance < totalPrice}
+                                    onClick={(e) => {
+                                        handleStepChange(1);
+                                        markStepComplete(2);
+                                        handleSubmit(e);
                                     }}
                                 >
-                                    Submit
+                                    Submit Intent
                                 </button>
                             </div>
-
-                            {activeStep === 3 && (
-                                <button type="submit">Submit Intent</button>
-                            )}
-                            {/* <button type="submit" className='submit-button'>Submit</button> */}
                         </form>
                         :
                         <div>
-                            <p> Please Connect your wallet before submitting a Job</p>
+                            <p> Please Connect your wallet before submitting an Intent</p>
                             <ConnectButton />
                         </div>
                 }
@@ -253,4 +307,4 @@ const CreateJob: React.FC = () => {
     );
 };
 
-export default CreateJob;
+export default CreateIntent;

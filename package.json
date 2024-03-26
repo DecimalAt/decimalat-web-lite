@@ -13,6 +13,7 @@
     "@types/node": "^16.18.86",
     "@types/react": "^18.2.61",
     "@types/react-dom": "^18.2.19",
+    "ethers": "^6.11.1",
     "graphql": "^16.8.1",
     "moment": "^2.30.1",
     "react": "^18.2.0",
