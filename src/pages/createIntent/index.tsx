@@ -38,6 +38,8 @@ const CreateIntent: React.FC = () => {
     const [balanceOfUser, setBalanceOfUser] = useState(0);
     const [allowance, setAllowance] = useState(0);
     const [checkifApprovalRequired, setCheckifApprovalRequired] = useState(true);
+    const [approvalRejectionReason, setApprovalRejectionReason] = useState('');
+    const [approvalAcceptanceReason, setApprovalAcceptanceReason] = useState('');
 
 
     const account = useAccount();
@@ -103,17 +105,27 @@ const CreateIntent: React.FC = () => {
     const submitForApproval = async (e: any) => {
         e.preventDefault();
         let contractOfDecimal;
+        setApprovalRejectionReason('');
+        setApprovalAcceptanceReason('');
         if (chain && signer) {
             contractOfDecimal = new ethers.Contract(decimalContractAddress[chain], erc20Abi, signer);
             try {
                 const expoValue = totalPrice * (10 ** 9);
                 const resp = await contractOfDecimal.approve(decimalContractAddress[chain], expoValue);
                 console.log(resp);
-                handleStepChange(2);
-                markStepComplete(1);
-            } catch (err) {
+                if (resp === true) {
+                    handleStepChange(2);
+                    markStepComplete(1);
+                    setApprovalAcceptanceReason('Approved')
+                } else {
+                    setApprovalRejectionReason('Please select a valid range for approval');
+                }
+            } catch (err: any) {
                 console.log(err);
+                setApprovalRejectionReason(err.shortMessage);
             }
+        } else {
+            setApprovalRejectionReason('Please select a valid chain!');
         }
     }
 
@@ -136,6 +148,13 @@ const CreateIntent: React.FC = () => {
         let contractOfDecimal;
         contractOfDecimal = new ethers.Contract(decimalContractAddress[chain], decimalAbiJson.abi, signer);
 
+        // const validatorArray = [
+        //     0xddCEBb0fDa24166a0526A5228Ba9Ee6457F280D4,
+        //     0x23e7fd59,
+        //     0x2604fdf9,
+
+        // ]
+
         try {
             const resp = await contractOfDecimal.createJob({
                 _validations: [],
@@ -143,9 +162,9 @@ const CreateIntent: React.FC = () => {
                 _pcrs: '',
                 _input: '',
                 _paymentPerExecution: pricePerExecution,
-                _maxBaseFee: 1,
-                _maxPriorityFee: 1,
-                _gasRefundAmount: 3,
+                _maxBaseFee: 1000000000,
+                _maxPriorityFee: 1000000000,
+                _gasRefundAmount: 100000,
                 _amount: totalPrice,
                 value: gasFee
             });
@@ -255,6 +274,10 @@ const CreateIntent: React.FC = () => {
                                     >
                                         {isPending ? 'Approving...' : 'Approve Rewards'}
                                     </button>
+                                    <div>
+                                        {approvalRejectionReason && <span style={{ color: 'red' }} className='error-message'>{approvalRejectionReason}</span>}
+                                        {approvalAcceptanceReason && <span style={{ color: 'green' }} className='error-message'>{approvalAcceptanceReason}</span>}
+                                    </div>
                                 </div>
                             </div>
                             <div className='frequency' style={divStyle}>
