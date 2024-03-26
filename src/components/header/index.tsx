@@ -41,7 +41,7 @@ const Header: React.FC<HeaderProps> = ({ toggleTheme }) => {
 
   const navItems = [
     // { label: "Home", path: "/" },
-    { label: "Jobs", path: "/jobs" },
+    { label: "Jobs", path: "/" },
     { label: "Feed", path: "/feed" },
     { label: "New Intent", path: "/create" },
   ];

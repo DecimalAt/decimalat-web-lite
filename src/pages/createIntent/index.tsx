@@ -231,7 +231,7 @@ const CreateIntent: React.FC = () => {
                                     {
                                         // balanceOfUser &&
                                         <>
-                                            <span style={{ color: '#eee', fontStyle: 'italic' }} className='error-message'>Balance: {balanceOfUser} USDC </span>
+                                            <span style={{ fontStyle: 'italic' }} className='sub-message'>Balance: {balanceOfUser} USDC </span>
                                             <span className='spacer-horizontal'>|</span>
                                             <InlineButton onClick={handleMaxChainClick}>Max</InlineButton>
                                         </>
@@ -265,9 +265,9 @@ const CreateIntent: React.FC = () => {
                                         Gwei
                                     </div>
                                     {
-                                        balance?.data &&
+                                        // balance?.data &&
                                         <>
-                                            <span style={{ color: '#eee', fontStyle: 'italic' }} className='error-message'>Balance: {balance.data.formatted} {balance.data.symbol} </span>
+                                            <span style={{ fontStyle: 'italic' }} className='sub-message'>Balance: {balance?.data?.formatted} {balance?.data?.symbol} </span>
                                             <span className='spacer-horizontal'>|</span>
                                             <InlineButton onClick={handleMaxClick}>Max</InlineButton>
                                         </>

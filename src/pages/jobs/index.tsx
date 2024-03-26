@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { DocumentNode, useQuery } from '@apollo/client';
 import { useAccount } from 'wagmi';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 import ResponsiveTable from '../../components/responsiveTable';
 import GET_JOB_LIST_QUERY from '../../graphql/jobListQuery';
@@ -41,6 +42,22 @@ const Jobs: React.FC<JobsProps> = ({ jobs }) => {
         variables: { address: account.address },
     });
 
+    if (filter === 'My' && !account.address) {
+        return (
+            <div className='content-page'>
+                <div className='jobsHeader'>
+                    <h2>Jobs</h2>
+                    <ToggleSwitch option1={'All'} option2={'My'} initialSelected={filter} onToggle={handleJobsFilter} />
+                </div>
+                {
+                    <div>
+                        <p> Please connect your wallet to continue</p>
+                        <ConnectButton />
+                    </div>
+                }
+            </div>
+        );
+    }
 
     if (loading) return <p>Loading...</p>;
     if (error) return <p>Error: {error.message}</p>;

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, DocumentNode } from '@apollo/client';
 import { useAccount } from 'wagmi';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 import ResponsiveTable from '../../components/responsiveTable';
 import GET_EXECUTION_QUERY from '../../graphql/executionQuery';
@@ -46,6 +47,23 @@ const Feed: React.FC<FeedProps> = ({ jobs }) => {
     const { loading, error, data } = useQuery(filterOptions[filter], {
         variables: { address: account.address },
     });
+
+    if (filter === 'My' && !account.address) {
+        return (
+            <div className='content-page'>
+                <div className='feedHeader'>
+                    <h2>Feed</h2>
+                    <ToggleSwitch option1={'All'} option2={'My'} initialSelected={filter} onToggle={handleFeedFilter} />
+                </div>
+                {
+                    <div>
+                        <p> Please connect your wallet to continue</p>
+                        <ConnectButton />
+                    </div>
+                }
+            </div>
+        );
+    }
 
     if (loading) return <p>Loading...</p>;
     if (error) return <p>Error: {error.message}</p>;

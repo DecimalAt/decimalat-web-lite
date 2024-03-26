@@ -68,10 +68,10 @@ const App: React.FC = () => {
                   {/* <SidePanel /> */}
                   <main className="main-content">
                     <Routes>
-                      <Route path="/" element={<Home />} />
+                      {/* <Route path="/" element={<Home />} /> */}
                       <Route path="/feed" element={<Feed />} />
                       <Route path="/history/:id" element={<History />} />
-                      <Route path="/jobs" element={<Jobs />} />
+                      <Route path="/" element={<Jobs />} />
                       <Route path="/create" element={<CreateJob />} />
                     </Routes>
                   </main>
