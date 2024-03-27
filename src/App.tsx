@@ -41,7 +41,15 @@ import './App.css';
 const config = getDefaultConfig({
   appName: 'decimalAt-web',
   projectId: '1e696e3657a96f5ea6d833e37d8a85c4',
-  chains: [mainnet, polygon, optimism, arbitrum, base, zora, gnosis],
+  chains: [
+    mainnet, 
+    // polygon, 
+    // optimism, 
+    // arbitrum, 
+    // base, 
+    // zora, 
+    gnosis
+  ],
   //ssr: true, // If your dApp uses server side rendering (SSR)
 });
 

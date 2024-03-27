@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     type BaseError,
     useSendTransaction,
@@ -7,14 +8,18 @@ import {
     useBalance,
 } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { type Hex, parseEther } from 'viem';
+// import { type Hex, parseEther } from 'viem';
 import { ethers } from 'ethers';
 import { erc20Abi } from 'viem';
 
 import InlineButton from '../../components/inlineButton';
 import { useEthersSigner } from '../../walletInteraction/ethers';
-import { decimalContractAddress, erc20USDC } from '../../walletInteraction/contractReference';
+import { BASE_TOKEN_DECIMALS, DECIMALS, JOB_CREATION_GAS, decimalContractAddress, erc20USDC } from '../../walletInteraction/contractReference';
 import decimalAbiJson from '../../walletInteraction/decimal.abi';
+import { IValidator, JobManager__factory } from '../../typechain-types';
+import { bigNumberToString, stringToBigNumber } from '../../utils/conversionHelper';
+import { IJobManager } from '../../typechain-types/contracts/JobManager';
+import WaitCursor from '../../components/waitCursor';
 
 import './styles.css';
 
@@ -29,21 +34,23 @@ const CreateIntent: React.FC = () => {
     const [address1, setAddress1] = useState('');
     const [address2, setAddress2] = useState('');
     const [frequencyValue, setFrequencyValue] = useState('');
-    const [pricePerExecution, setPricePerExecution] = useState<number>(0);
-    const [totalPrice, setTotalPrice] = useState<number>(0);
-    const [gasFee, setGasFee] = useState<number>(0);
+    const [pricePerExecution, setPricePerExecution] = useState<string>('');
+    const [totalPrice, setTotalPrice] = useState<string>('');
+    const [gasFee, setGasFee] = useState<string>('');
     const [rewardsError, setRewardsError] = useState('');
     const [activeStep, setActiveStep] = useState(1);
     const [completedSteps, setCompletedSteps] = useState<number[]>([]);
-    const [balanceOfUser, setBalanceOfUser] = useState(0);
-    const [allowance, setAllowance] = useState(0);
+    const [balanceOfUser, setBalanceOfUser] = useState(0n);
+    const [allowance, setAllowance] = useState(0n);
     const [checkifApprovalRequired, setCheckifApprovalRequired] = useState(true);
     const [approvalRejectionReason, setApprovalRejectionReason] = useState('');
     const [approvalAcceptanceReason, setApprovalAcceptanceReason] = useState('');
+    const [isWaiting, setIsWaiting] = useState(false);
 
 
     const account = useAccount();
     const balance = useBalance({ address: account?.address });
+    const navigate = useNavigate();
     const { data: hash, error, isPending } = useSendTransaction();
     const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash });
     const signer = useEthersSigner({ chainId: account?.chain?.id });
@@ -55,23 +62,23 @@ const CreateIntent: React.FC = () => {
             let contractOfUser = new ethers.Contract(erc20USDC[chain], erc20Abi, signer);
             //To get the balance
             contractOfUser && contractOfUser.balanceOf(account.address).then((resp) => {
-                setBalanceOfUser(Number(ethers.formatEther(resp)));
+                setBalanceOfUser(resp);
             }, err => {
                 console.log(err);
-                setBalanceOfUser(0);
+                setBalanceOfUser(0n);
             });
             //To Check Allowance
             contractOfUser && contractOfUser.allowance(account.address, decimalContractAddress[chain]).then((resp) => {
-                setAllowance(Number(ethers.formatEther(resp)));
+                setAllowance(resp);
             }, err => {
                 console.log(err);
-                setAllowance(0);
+                setAllowance(0n);
             });
         }
     }, [account]);
 
     useEffect(() => {
-        if (allowance >= totalPrice) {
+        if (allowance >= stringToBigNumber(totalPrice, DECIMALS[chain])) {
             setCheckifApprovalRequired(false);
             handleStepChange(2);
             markStepComplete(1);
@@ -88,7 +95,7 @@ const CreateIntent: React.FC = () => {
     };
 
     const handleRewardsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setPricePerExecution(Number(event.target.value));
+        setPricePerExecution(event.target.value);
         setRewardsError('');
     };
 
@@ -104,25 +111,30 @@ const CreateIntent: React.FC = () => {
 
     const submitForApproval = async (e: any) => {
         e.preventDefault();
+        setIsWaiting(true);
         let contractOfDecimal;
         setApprovalRejectionReason('');
         setApprovalAcceptanceReason('');
         if (chain && signer) {
-            contractOfDecimal = new ethers.Contract(decimalContractAddress[chain], erc20Abi, signer);
+            contractOfDecimal = new ethers.Contract(erc20USDC[chain], erc20Abi, signer);
             try {
-                const expoValue = totalPrice * (10 ** 9);
+                const expoValue = stringToBigNumber(totalPrice, DECIMALS[chain]);
                 const resp = await contractOfDecimal.approve(decimalContractAddress[chain], expoValue);
-                console.log(resp);
-                if (resp === true) {
-                    handleStepChange(2);
-                    markStepComplete(1);
-                    setApprovalAcceptanceReason('Approved')
-                } else {
-                    setApprovalRejectionReason('Please select a valid range for approval');
+                if (resp && resp.wait) {
+                    const response = await resp.wait();
+                    if (response.status) {
+                        handleStepChange(2);
+                        markStepComplete(1);
+                        setApprovalAcceptanceReason('Approved')
+                    } else {
+                        setApprovalRejectionReason('Please select a valid range for approval');
+                    }
                 }
+                setIsWaiting(false);
             } catch (err: any) {
                 console.log(err);
                 setApprovalRejectionReason(err.shortMessage);
+                setIsWaiting(false);
             }
         } else {
             setApprovalRejectionReason('Please select a valid chain!');
@@ -130,11 +142,37 @@ const CreateIntent: React.FC = () => {
     }
 
     const handleMaxChainClick = () => {
-        setTotalPrice(Number(balanceOfUser));
+        setTotalPrice(bigNumberToString(balanceOfUser, DECIMALS[chain]));
     }
 
     const handleMaxClick = () => {
-        setGasFee(Number(balance?.data?.formatted));
+        setGasFee(bigNumberToString((balance?.data?.value || 0n) /*/ JOB_CREATION_GAS[chain]*/, DECIMALS[chain]));
+    }
+
+    // const checkApprovalButtonActive = () => {
+    //     return activeStep === 1 &&
+    //         (allowance < stringToBigNumber(totalPrice));
+    // }
+
+    const checkApprovalButtonDisabled = () => {
+        const a = stringToBigNumber(totalPrice);
+        return stringToBigNumber(totalPrice) == 0n ||
+            allowance >= stringToBigNumber(totalPrice) ||
+            !checkifApprovalRequired ||
+            isConfirming ||
+            isConfirmed;
+    }
+
+    // const checkSubmitButtonActive = () => {
+    //     return activeStep === 2 &&
+    //         stringToBigNumber(totalPrice) > 0n &&
+    //         allowance >= stringToBigNumber(totalPrice);
+    // }
+
+    const checkSubmitButtonDisabled = () => {
+        return stringToBigNumber(totalPrice) == 0n ||
+            !completedSteps.includes(1) ||
+            allowance < stringToBigNumber(totalPrice);
     }
 
     const handleSubmit = async (event: any) => {
@@ -143,34 +181,59 @@ const CreateIntent: React.FC = () => {
             setRewardsError('Price per execution is required');
             return;
         }
-        console.log('Form submitted!');
 
-        let contractOfDecimal;
-        contractOfDecimal = new ethers.Contract(decimalContractAddress[chain], decimalAbiJson.abi, signer);
+        setIsWaiting(true);
+        // let contractOfDecimal;
+        // contractOfDecimal = new ethers.Contract(decimalContractAddress[chain], decimalAbiJson.abi, signer);
+        let contractOfDecimal = JobManager__factory.connect(decimalContractAddress[chain], signer)
 
-        // const validatorArray = [
-        //     0xddCEBb0fDa24166a0526A5228Ba9Ee6457F280D4,
-        //     0x23e7fd59,
-        //     0x2604fdf9,
-
-        // ]
+        const abi = ethers.AbiCoder.defaultAbiCoder();
+        const initKeys: string[] = ['type', 'token0', 'token1', 'frequency'];
+        const initValues: string[] = ['priceFeed', address1, address2, frequencyValue];
+        const image: IJobManager.ImageStruct = { PCR0: "0x12", PCR1: "0x34", PCR2: "0x56" };
+        const bytes = '0x';
+        const validatorArray: IJobManager.ValidationSetupStruct[] = [
+            {
+                validationAddress: '0xddCEBb0fDa24166a0526A5228Ba9Ee6457F280D4',
+                validationFunction: '0x23e7fd59',
+                initializerFunction: '0x2604fdf9',
+                initializerData: abi.encode(["string[]", "string[]"], [initKeys, initValues])
+            }
+        ];
 
         try {
-            const resp = await contractOfDecimal.createJob({
-                _validations: [],
-                _enclave_url: enclaveImage,
-                _pcrs: '',
-                _input: '',
-                _paymentPerExecution: pricePerExecution,
-                _maxBaseFee: 1000000000,
-                _maxPriorityFee: 1000000000,
-                _gasRefundAmount: 100000,
-                _amount: totalPrice,
-                value: gasFee
-            });
+            const resp = await contractOfDecimal.createJob(
+                validatorArray,
+                enclaveImage,
+                image,
+                bytes,
+                stringToBigNumber(pricePerExecution, DECIMALS[chain]),
+                1000000000,
+                1000000000,
+                100000,
+                stringToBigNumber(totalPrice, DECIMALS[chain]),
+                {
+                    gasLimit: 1000000
+                }
+            );
             console.log(resp);
+            if (resp && resp.wait) {
+                const response = await resp.wait();
+                if (response?.status) {
+                    handleStepChange(3);
+                    markStepComplete(2);
+                    alert('Intent Submitted Successfully !');
+                    navigate('/');
+                } else {
+                    // TODO: failure Success message
+                    alert('Cannot Submit !');
+                }
+            }
+            setIsWaiting(false);
         } catch (err) {
+            alert('Cannot Submit !');
             console.log(err);
+            setIsWaiting(false);
         }
     };
 
@@ -235,7 +298,7 @@ const CreateIntent: React.FC = () => {
                                 <div className='form-group'>
                                     <label>Rewards Per Execution:</label>
                                     <div className='frequency'>
-                                        <input type="number" min="0" value={pricePerExecution} onChange={handleRewardsChange} required />
+                                        <input type='text' value={pricePerExecution} onChange={handleRewardsChange} required />
                                         USDC
                                     </div>
                                     {<span style={{ color: 'transparent' }} className='error-message'>.</span>}
@@ -244,13 +307,13 @@ const CreateIntent: React.FC = () => {
                                 <div className='form-group'>
                                     <label>Total Rewards:</label>
                                     <div className='frequency'>
-                                        <input name="totalPrice" type="number" min="0" value={totalPrice} onChange={(e) => setTotalPrice(Number(e.target.value))} required />
+                                        <input type='text' name="totalPrice" value={totalPrice} onChange={(e) => setTotalPrice(e.target.value)} required />
                                         USDC
                                     </div>
                                     {
                                         // balanceOfUser &&
                                         <>
-                                            <span style={{ fontStyle: 'italic' }} className='sub-message'>Balance: {balanceOfUser} USDC </span>
+                                            <span style={{ fontStyle: 'italic' }} className='sub-message'>Balance: {bigNumberToString(balanceOfUser, DECIMALS[chain])} USDC </span>
                                             <span className='spacer-horizontal'>|</span>
                                             <InlineButton onClick={handleMaxChainClick}>Max</InlineButton>
                                         </>
@@ -261,43 +324,44 @@ const CreateIntent: React.FC = () => {
                             <div className='form-group'>
                                 <i>
                                     {
-                                        !!(totalPrice && pricePerExecution) && (`Approx executions: ~ ${Math.floor(totalPrice / pricePerExecution)}`)
+                                        stringToBigNumber(pricePerExecution) > 0 && !!(totalPrice && pricePerExecution) && (`Approx executions: ~ ${stringToBigNumber(totalPrice) / stringToBigNumber(pricePerExecution)}`)
                                     }
                                 </i>
                             </div>
                             <div className="stepper">
                                 <div className='form-group'>
                                     <button
-                                        className={activeStep === 1 ? 'active' : ''}
+                                        className={!checkApprovalButtonDisabled() ? 'active' : ''}
                                         onClick={(e) => { submitForApproval(e) }}
-                                        disabled={totalPrice == 0 || !checkifApprovalRequired || isConfirming || isConfirmed}
+                                        disabled={checkApprovalButtonDisabled()}
                                     >
                                         {isPending ? 'Approving...' : 'Approve Rewards'}
                                     </button>
                                     <div>
                                         {approvalRejectionReason && <span style={{ color: 'red' }} className='error-message'>{approvalRejectionReason}</span>}
-                                        {approvalAcceptanceReason && <span style={{ color: 'green' }} className='error-message'>{approvalAcceptanceReason}</span>}
+                                        {approvalAcceptanceReason && <span style={{ color: '#00ff0a' }} className='error-message'>{approvalAcceptanceReason}</span>}
                                     </div>
                                 </div>
                             </div>
-                            <div className='frequency' style={divStyle}>
+                            {/* <div className='frequency' style={divStyle}>
                                 <div className='form-group'>
                                     <label>Gas Fee:</label>
                                     <div className='frequency'>
-                                        <input name="gasFee" type="number" value={gasFee} onChange={(e) => setGasFee(Number(e.target.value))} required />
+                                        <input type='text' name="gasFee" value={gasFee} onChange={(e) => setGasFee(e.target.value)} required />
                                         Gwei
                                     </div>
                                     {
                                         // balance?.data &&
                                         <>
-                                            <span style={{ fontStyle: 'italic' }} className='sub-message'>Balance: {balance?.data?.formatted} {balance?.data?.symbol} </span>
+                                    <span style={{ fontStyle: 'italic' }} className='sub-message'>Balance: {bigNumberToString((balance?.data?.value || 0n) */}
+                            {/*/ JOB_CREATION_GAS[chain], DECIMALS[chain])} {balance?.data?.symbol} </span>
                                             <span className='spacer-horizontal'>|</span>
                                             <InlineButton onClick={handleMaxClick}>Max</InlineButton>
                                         </>
                                     }
                                     {rewardsError && <span style={{ color: 'red' }} className='error-message'>{rewardsError}</span>}
                                 </div>
-                            </div>
+                            </div> */}
                             <br />
                             {isConfirming && <div>Waiting for Approval...</div>}
                             {isConfirmed && <div>Transaction Approved.</div>}
@@ -307,8 +371,8 @@ const CreateIntent: React.FC = () => {
                             <br />
                             <div className='stepper'>
                                 <button
-                                    className={activeStep === 2 && totalPrice > 0 && allowance >= totalPrice ? 'active' : ''}
-                                    disabled={totalPrice == 0 || !completedSteps.includes(1) || allowance < totalPrice}
+                                    className={!checkSubmitButtonDisabled() ? 'active' : ''}
+                                    disabled={checkSubmitButtonDisabled()}
                                     onClick={(e) => {
                                         handleStepChange(1);
                                         markStepComplete(2);
@@ -324,6 +388,9 @@ const CreateIntent: React.FC = () => {
                             <p> Please Connect your wallet before submitting an Intent</p>
                             <ConnectButton />
                         </div>
+                }
+                {
+                    <WaitCursor isLoading={isWaiting} />
                 }
             </div>
         </>
