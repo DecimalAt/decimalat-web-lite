@@ -3,7 +3,7 @@ import {
     DEFAULT_PRECISION
 } from './constants';
 
-import { ethers } from 'ethers';
+import { BigNumberish, ethers } from 'ethers';
 
 
 export function isInputAmountValid(amount: string): boolean {

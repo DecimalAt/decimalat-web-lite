@@ -16,7 +16,7 @@ import InlineButton from '../../components/inlineButton';
 import { useEthersSigner } from '../../walletInteraction/ethers';
 import { BASE_TOKEN_DECIMALS, DECIMALS, JOB_CREATION_GAS, decimalContractAddress, erc20USDC } from '../../walletInteraction/contractReference';
 import decimalAbiJson from '../../walletInteraction/decimal.abi';
-import { IValidator, JobManager__factory } from '../../typechain-types';
+import { IValidator, IValidator__factory, JobManager__factory } from '../../typechain-types';
 import { bigNumberToString, stringToBigNumber } from '../../utils/conversionHelper';
 import { IJobManager } from '../../typechain-types/contracts/JobManager';
 import WaitCursor from '../../components/waitCursor';
@@ -191,30 +191,39 @@ const CreateIntent: React.FC = () => {
         const initKeys: string[] = ['type', 'token0', 'token1', 'frequency'];
         const initValues: string[] = ['priceFeed', address1, address2, frequencyValue];
         const image: IJobManager.ImageStruct = { PCR0: "0x12", PCR1: "0x34", PCR2: "0x56" };
-        const bytes = '0x';
+        const bytes = '0x1234';
         const validatorArray: IJobManager.ValidationSetupStruct[] = [
             {
                 validationAddress: '0xddCEBb0fDa24166a0526A5228Ba9Ee6457F280D4',
-                validationFunction: '0x23e7fd59',
-                initializerFunction: '0x2604fdf9',
+                validationFunction: IValidator__factory.createInterface().getFunction("validate").selector,
+                initializerFunction: IValidator__factory.createInterface().getFunction("initialize").selector,
                 initializerData: abi.encode(["string[]", "string[]"], [initKeys, initValues])
             }
         ];
 
         try {
+            console.log({
+                validatorArray,
+                enclaveImage,
+                image,
+                bytes,
+                payment: stringToBigNumber(pricePerExecution, DECIMALS[chain]),
+                a: 1000000000,
+                b: 1000000000,
+                c: 100000,
+                amount: stringToBigNumber(totalPrice, DECIMALS[chain])
+            })
             const resp = await contractOfDecimal.createJob(
                 validatorArray,
                 enclaveImage,
                 image,
                 bytes,
-                stringToBigNumber(pricePerExecution, DECIMALS[chain]),
+                stringToBigNumber(pricePerExecution, DECIMALS[chain]).toString(),
                 1000000000,
                 1000000000,
                 100000,
-                stringToBigNumber(totalPrice, DECIMALS[chain]),
-                {
-                    gasLimit: 1000000
-                }
+                stringToBigNumber(totalPrice, DECIMALS[chain]).toString(),
+                {value: 100000}
             );
             console.log(resp);
             if (resp && resp.wait) {
