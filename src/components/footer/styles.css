@@ -13,3 +13,7 @@
 .logo-footer {
     cursor: pointer;
 }
+
+.disclaimer {
+    text-transform: uppercase;
+}

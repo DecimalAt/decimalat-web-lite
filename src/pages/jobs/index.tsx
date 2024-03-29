@@ -66,7 +66,7 @@ const Jobs: React.FC<JobsProps> = ({ jobs }) => {
         { key: 'id', header: 'ID' },
         { key: 'creator', header: 'Creator', truncate: true },
         // { key: 'extractor', header: 'Extractor', truncate: true },
-        { key: 'pricePerExecution', header: 'Price Per Execution' },
+        // { key: 'pricePerExecution', header: 'Price Per Execution' },
         // { key: 'maxExecutions', header: 'Max Executions' },
         // { key: 'totalExecutions', header: 'Total Executions' },
         // { key: 'executionInterval', header: 'Execution Interval' },

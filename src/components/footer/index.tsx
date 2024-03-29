@@ -60,6 +60,7 @@ const Footer: React.FC<FooterProps> = ({ selectedTheme }) => {
                 </div>
                 <div className="footer-content">
                     <p>Decimal© 2023-2024. All Rights Reserved.</p>
+                    <p className='disclaimer'>The application is pending audit. DYOR and use at your own risk.</p>
                     <p>These materials are for general information purposes only and are not investment advice or a recommendation or solicitation to buy, sell, stake or hold any cryptoasset or to engage in any specific trading strategy. Decimal does not and will not work to increase or decrease the price of any particular cryptoasset it makes available. Some crypto products and markets are unregulated, and you may not be protected by government compensation and/or regulatory protection schemes. The unpredictable nature of the crypto-asset markets can lead to loss of funds. Tax may be payable on any return and/or on any increase in the value of your cryptoassets and you should seek independent advice on your taxation position. Geographic restrictions may apply.</p>
                 </div>
             </StyledFooterContainer>

@@ -34,6 +34,7 @@ const CreateIntent: React.FC = () => {
     const [address1, setAddress1] = useState('');
     const [address2, setAddress2] = useState('');
     const [frequencyValue, setFrequencyValue] = useState('');
+    const [frequencyType, setFrequencyType] = useState('');
     const [pricePerExecution, setPricePerExecution] = useState<string>('');
     const [totalPrice, setTotalPrice] = useState<string>('');
     const [gasFee, setGasFee] = useState<string>('');
@@ -149,11 +150,6 @@ const CreateIntent: React.FC = () => {
         setGasFee(bigNumberToString((balance?.data?.value || 0n) /*/ JOB_CREATION_GAS[chain]*/, DECIMALS[chain]));
     }
 
-    // const checkApprovalButtonActive = () => {
-    //     return activeStep === 1 &&
-    //         (allowance < stringToBigNumber(totalPrice));
-    // }
-
     const checkApprovalButtonDisabled = () => {
         const a = stringToBigNumber(totalPrice);
         return stringToBigNumber(totalPrice) == 0n ||
@@ -162,12 +158,6 @@ const CreateIntent: React.FC = () => {
             isConfirming ||
             isConfirmed;
     }
-
-    // const checkSubmitButtonActive = () => {
-    //     return activeStep === 2 &&
-    //         stringToBigNumber(totalPrice) > 0n &&
-    //         allowance >= stringToBigNumber(totalPrice);
-    // }
 
     const checkSubmitButtonDisabled = () => {
         return stringToBigNumber(totalPrice) == 0n ||
@@ -223,7 +213,7 @@ const CreateIntent: React.FC = () => {
                 1000000000,
                 100000,
                 stringToBigNumber(totalPrice, DECIMALS[chain]).toString(),
-                {value: 100000}
+                { value: 100000 }
             );
             console.log(resp);
             if (resp && resp.wait) {
@@ -252,107 +242,140 @@ const CreateIntent: React.FC = () => {
                 <h2>
                     Create Intent
                 </h2>
-                {
-                    account.address ?
-                        <form onSubmit={handleSubmit} className='form-container'>
-                            <div className='form-group'>
-                                <label>Enclave Image URL:</label>
-                                <input
-                                    type="url"
-                                    value={enclaveImage}
-                                    onChange={(e) => setEnclaveImage(e.target.value)}
-                                    placeholder='https://github.com/....'
-                                    required
-                                />
-                            </div>
-                            <br />
-                            <div className='form-group'>
-                                <label>Validator Contract:</label>
-                                <select value={validatorContract} onChange={handleValidatorContractChange} required>
-                                    <option value="">Select Validator Contract</option>
-                                    <option value="Price Feed Oracle">Price Feed Oracle</option>
-                                </select>
-                            </div>
-                            {validatorContract && (
-                                <>
+                <div className='formAndSummary'>
+                    <div className='intentForm'>
+                        {
+                            account.address ?
+                                <form onSubmit={handleSubmit} className='form-container'>
                                     <div className='form-group'>
-                                        <label>Fetch me the price value pair of: </label>
-                                        <div className='frequency'>
-                                            <input type="text" placeholder='0x1234' value={address1} onChange={e => setAddress1(e.target.value)} required />
-                                            vs
-                                            <input type="text" placeholder='0x4321' value={address2} onChange={e => setAddress2(e.target.value)} required />
+                                        <label>Validator Contract:</label>
+                                        <select value={validatorContract} onChange={handleValidatorContractChange} required>
+                                            <option value="">Select Validator Contract</option>
+                                            <option value="Price feed">Price feed</option>
+                                            <option value="Custom code">Custom code</option>
+                                        </select>
+                                    </div>
+                                    {
+                                        validatorContract === 'Custom code' && (
+                                            <>
+                                                <div className='form-group'>
+                                                    <label>Enclave Image URL:</label>
+                                                    <input
+                                                        type="url"
+                                                        value={enclaveImage}
+                                                        onChange={(e) => setEnclaveImage(e.target.value)}
+                                                        placeholder='https://github.com/....'
+                                                        required
+                                                    />
+                                                </div>
+                                            </>
+                                        )
+                                    }
+                                    {
+                                        validatorContract === 'Price feed' && (
+                                            <>
+                                                <div className='form-group'>
+                                                    <label>Fetch me the price value pair of: </label>
+                                                    <div className='frequency'>
+                                                        <input type="text" placeholder='0x1234' value={address1} onChange={e => setAddress1(e.target.value)} required />
+                                                        vs
+                                                        <input type="text" placeholder='0x4321' value={address2} onChange={e => setAddress2(e.target.value)} required />
+                                                    </div>
+                                                </div>
+                                            </>
+                                        )
+                                    }
+                                    <div className='frequency' style={divStyle}>
+                                        <div className='form-group' style={{ maxWidth: frequencyType === '' ? '100%' : '150px' }}>
+                                            <label>Select Trigger:</label>
+                                            <select value={frequencyType} onChange={(e) => { setFrequencyType(e.target.value); setFrequencyValue(''); }} required>
+                                                <option value="">Select trigger</option>
+                                                <option value="Frequency">Frequency</option>
+                                                <option value="Custom code">Custom code</option>
+                                            </select>
+                                        </div>
+                                        {
+                                            frequencyType === 'Frequency' && (
+                                                <div className='form-group'>
+                                                    <label>Every:</label>
+                                                    <div className='frequency'>
+                                                        <input
+                                                            type="number"
+                                                            value={frequencyValue}
+                                                            onChange={(e) => setFrequencyValue(e.target.value)}
+                                                            required
+                                                        />
+                                                        Blocks
+                                                    </div>
+                                                </div>
+                                            )
+                                        }
+                                        {
+                                            frequencyType === 'Custom code' && (
+                                                <div className='form-group'>
+                                                    <label>Custom validation code:</label>
+                                                    <div className='frequency'>
+                                                        <input
+                                                            type="url"
+                                                            value={frequencyValue}
+                                                            onChange={(e) => setFrequencyValue(e.target.value)}
+                                                            placeholder='https://github.com/....'
+                                                            required
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )
+                                        }
+                                    </div>
+                                    <div className='frequency' style={divStyle}>
+                                        <div className='form-group'>
+                                            <label>Rewards Per Execution:</label>
+                                            <div className='frequency'>
+                                                <input type='text' value={pricePerExecution} onChange={handleRewardsChange} required />
+                                                DPT
+                                            </div>
+                                            {<span style={{ color: 'transparent' }} className='error-message'>.</span>}
+                                            {rewardsError && <span style={{ color: 'red' }} className='error-message'>{rewardsError}</span>}
+                                        </div>
+                                        <div className='form-group'>
+                                            <label>Total Rewards:</label>
+                                            <div className='frequency'>
+                                                <input type='text' name="totalPrice" value={totalPrice} onChange={(e) => setTotalPrice(e.target.value)} required />
+                                                DPT
+                                            </div>
+                                            {
+                                                <>
+                                                    {/* <span style={{ fontStyle: 'italic' }} className='sub-message'>Balance: {bigNumberToString(balanceOfUser, DECIMALS[chain])} DPT </span>
+                                                    <span className='spacer-horizontal'>|</span> */}
+                                                    <InlineButton onClick={handleMaxChainClick}>Max</InlineButton>
+                                                </>
+                                            }
+                                            {rewardsError && <span style={{ color: 'red' }} className='error-message'>{rewardsError}</span>}
                                         </div>
                                     </div>
-                                    <div className='form-group'>
-                                        <label>Every:</label>
-                                        <div className='frequency'>
-                                            <input
-                                                type="number"
-                                                value={frequencyValue}
-                                                onChange={(e) => setFrequencyValue(e.target.value)}
-                                                required
-                                            />
-                                            Blocks
-                                        </div>
-                                    </div>
-                                    <div className='form-group'>
+                                    {/* <div className='form-group'>
                                         <i>
-                                            Example: Fetch me the price value pair of BTC vs USDC, every 5 blocks.
+                                            {
+                                                stringToBigNumber(pricePerExecution) > 0 && !!(totalPrice && pricePerExecution) && (`Approx executions: ~ ${stringToBigNumber(totalPrice) / stringToBigNumber(pricePerExecution)}`)
+                                            }
                                         </i>
+                                    </div> */}
+                                    <div className="stepper">
+                                        <div className='form-group'>
+                                            <button
+                                                className={!checkApprovalButtonDisabled() ? 'active' : ''}
+                                                onClick={(e) => { submitForApproval(e) }}
+                                                disabled={checkApprovalButtonDisabled()}
+                                            >
+                                                {isPending ? 'Approving...' : 'Approve Rewards'}
+                                            </button>
+                                            <div>
+                                                {approvalRejectionReason && <span style={{ color: 'red' }} className='error-message'>{approvalRejectionReason}</span>}
+                                                {approvalAcceptanceReason && <span style={{ color: '#00ff0a' }} className='error-message'>{approvalAcceptanceReason}</span>}
+                                            </div>
+                                        </div>
                                     </div>
-                                </>
-                            )}
-                            <br />
-                            <div className='frequency' style={divStyle}>
-                                <div className='form-group'>
-                                    <label>Rewards Per Execution:</label>
-                                    <div className='frequency'>
-                                        <input type='text' value={pricePerExecution} onChange={handleRewardsChange} required />
-                                        USDC
-                                    </div>
-                                    {<span style={{ color: 'transparent' }} className='error-message'>.</span>}
-                                    {rewardsError && <span style={{ color: 'red' }} className='error-message'>{rewardsError}</span>}
-                                </div>
-                                <div className='form-group'>
-                                    <label>Total Rewards:</label>
-                                    <div className='frequency'>
-                                        <input type='text' name="totalPrice" value={totalPrice} onChange={(e) => setTotalPrice(e.target.value)} required />
-                                        USDC
-                                    </div>
-                                    {
-                                        // balanceOfUser &&
-                                        <>
-                                            <span style={{ fontStyle: 'italic' }} className='sub-message'>Balance: {bigNumberToString(balanceOfUser, DECIMALS[chain])} USDC </span>
-                                            <span className='spacer-horizontal'>|</span>
-                                            <InlineButton onClick={handleMaxChainClick}>Max</InlineButton>
-                                        </>
-                                    }
-                                    {rewardsError && <span style={{ color: 'red' }} className='error-message'>{rewardsError}</span>}
-                                </div>
-                            </div>
-                            <div className='form-group'>
-                                <i>
-                                    {
-                                        stringToBigNumber(pricePerExecution) > 0 && !!(totalPrice && pricePerExecution) && (`Approx executions: ~ ${stringToBigNumber(totalPrice) / stringToBigNumber(pricePerExecution)}`)
-                                    }
-                                </i>
-                            </div>
-                            <div className="stepper">
-                                <div className='form-group'>
-                                    <button
-                                        className={!checkApprovalButtonDisabled() ? 'active' : ''}
-                                        onClick={(e) => { submitForApproval(e) }}
-                                        disabled={checkApprovalButtonDisabled()}
-                                    >
-                                        {isPending ? 'Approving...' : 'Approve Rewards'}
-                                    </button>
-                                    <div>
-                                        {approvalRejectionReason && <span style={{ color: 'red' }} className='error-message'>{approvalRejectionReason}</span>}
-                                        {approvalAcceptanceReason && <span style={{ color: '#00ff0a' }} className='error-message'>{approvalAcceptanceReason}</span>}
-                                    </div>
-                                </div>
-                            </div>
-                            {/* <div className='frequency' style={divStyle}>
+                                    {/* <div className='frequency' style={divStyle}>
                                 <div className='form-group'>
                                     <label>Gas Fee:</label>
                                     <div className='frequency'>
@@ -363,7 +386,7 @@ const CreateIntent: React.FC = () => {
                                         // balance?.data &&
                                         <>
                                     <span style={{ fontStyle: 'italic' }} className='sub-message'>Balance: {bigNumberToString((balance?.data?.value || 0n) */}
-                            {/*/ JOB_CREATION_GAS[chain], DECIMALS[chain])} {balance?.data?.symbol} </span>
+                                    {/*/ JOB_CREATION_GAS[chain], DECIMALS[chain])} {balance?.data?.symbol} </span>
                                             <span className='spacer-horizontal'>|</span>
                                             <InlineButton onClick={handleMaxClick}>Max</InlineButton>
                                         </>
@@ -371,33 +394,111 @@ const CreateIntent: React.FC = () => {
                                     {rewardsError && <span style={{ color: 'red' }} className='error-message'>{rewardsError}</span>}
                                 </div>
                             </div> */}
-                            <br />
-                            {isConfirming && <div>Waiting for Approval...</div>}
-                            {isConfirmed && <div>Transaction Approved.</div>}
-                            {error && (
-                                <div className='error-message'>Error: {(error as BaseError).shortMessage || error.message}</div>
-                            )}
-                            <br />
-                            <div className='stepper'>
-                                <button
-                                    className={!checkSubmitButtonDisabled() ? 'active' : ''}
-                                    disabled={checkSubmitButtonDisabled()}
-                                    onClick={(e) => {
-                                        handleStepChange(1);
-                                        markStepComplete(2);
-                                        handleSubmit(e);
-                                    }}
-                                >
-                                    Submit Intent
-                                </button>
-                            </div>
-                        </form>
-                        :
-                        <div>
-                            <p> Please Connect your wallet before submitting an Intent</p>
-                            <ConnectButton />
-                        </div>
-                }
+                                    {/* <br /> */}
+                                    {isConfirming && <div>Waiting for Approval...</div>}
+                                    {isConfirmed && <div>Transaction Approved.</div>}
+                                    {error && (
+                                        <div className='error-message'>Error: {(error as BaseError).shortMessage || error.message}</div>
+                                    )}
+                                    {/* <br /> */}
+                                    <div className='stepper'>
+                                        <button
+                                            className={!checkSubmitButtonDisabled() ? 'active' : ''}
+                                            disabled={checkSubmitButtonDisabled()}
+                                            onClick={(e) => {
+                                                handleStepChange(1);
+                                                markStepComplete(2);
+                                                handleSubmit(e);
+                                            }}
+                                        >
+                                            Submit Intent
+                                        </button>
+                                    </div>
+                                </form>
+                                :
+                                <div>
+                                    <p> Please Connect your wallet before submitting an Intent</p>
+                                    <ConnectButton />
+                                </div>
+                        }
+                    </div>
+                    <div className='summary'>
+                        {
+                            account.address &&
+                            <>
+                                <div className='summaryHeader'>
+                                    Here's your intent summary: Let's Go!
+                                </div>
+                                <div className='summaryBody'>
+                                    Your wallet address is <span className='args'>{account.address}</span>
+                                    <br />
+                                    <br />
+                                    with token balance <span className='args'>{bigNumberToString((balance?.data?.value || 0n), DECIMALS[chain])} {balance?.data?.symbol}</span>
+                                    <br />
+                                    <br />
+                                    <br />
+                                    {
+                                        validatorContract === 'Price feed' && (
+                                            <p>Get me the price feed for <span className='args'>{address1 || 'token0'}</span> vs <span className='args'>{address2 || 'token1'}</span></p>
+                                        )
+                                    }
+                                    {
+                                        validatorContract === 'Custom code' && (
+                                            <p>Run my custom code from: <span className='args'>{enclaveImage || '<URL1>'}</span></p>
+                                        )
+                                    }
+                                    {
+                                        frequencyType === 'Frequency' && (
+                                            <p>every <span className='args'>{frequencyValue || '0'}</span> blocks.</p>
+                                        )
+                                    }
+                                    {
+                                        frequencyType === 'Custom code' && (
+                                            <p>when the trigger conditions of <span className='args'>{frequencyValue || '<URL2>'}</span> is set.</p>
+                                        )
+                                    }
+                                    <br />
+                                    {
+                                        !!balanceOfUser && pricePerExecution && (
+                                            <p>Of my current rewards balance: <span className='args'>{`${bigNumberToString(balanceOfUser, DECIMALS[chain])}`}</span> DPT</p>
+                                        )
+                                    }
+                                    {
+                                        pricePerExecution && (
+                                            <>
+                                                <p>I'll pay <span className='args'>{pricePerExecution}</span> DPT for every execution;
+                                                    {
+                                                        totalPrice && (
+                                                            <span> & allocate <span className='args'>{totalPrice}</span> DPT for this job in total.</span>
+                                                        )
+                                                    }
+                                                </p>
+                                            </>
+                                        )
+                                    }
+                                    {/* {
+                                        totalPrice && (
+                                            <p>& allocate <span className='args'>{totalPrice}</span> DPT for this job in total.</p>
+                                        )
+                                    } */}
+                                    {
+
+                                        stringToBigNumber(pricePerExecution) > 0 && !!(totalPrice && pricePerExecution) && (
+                                            <p>This means the job can be run ~ <span className='args'>{`${stringToBigNumber(totalPrice) / stringToBigNumber(pricePerExecution)}`}</span> times.</p>
+                                        )
+                                    }
+                                    <br />
+                                    {
+                                        !!allowance && pricePerExecution && (
+                                            <p>There are total <span className='args'>{`${bigNumberToString(allowance, DECIMALS[chain])}`}</span> DPT approved rewards for this job.</p>
+                                        )
+                                    }
+
+                                </div>
+                            </>
+                        }
+                    </div>
+                </div>
                 {
                     <WaitCursor isLoading={isWaiting} />
                 }

@@ -121,3 +121,34 @@
     margin-right: 10px;
     margin-left: 10px;
 }
+
+.formAndSummary {
+    display: flex;
+    flex-direction: row;
+}
+
+.intentForm {
+    margin-right: 50px;
+}
+
+.summary {
+    display: flex;
+    flex-direction: column;
+}
+
+.summaryHeader {
+    font-weight: bold;
+    margin-top: 20px;
+    /* font-size: 18px; */
+}
+
+.summaryBody {
+    margin-top: 30px;
+    /* font-size: 16px; */
+}
+
+.args {
+    color: #007bff;
+    font-style: italic;
+    padding: 0 5px;
+}
