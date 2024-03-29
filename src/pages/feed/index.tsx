@@ -76,7 +76,8 @@ const Feed: React.FC<FeedProps> = ({ jobs }) => {
                 feedItem = {
                     ...item,
                     data: item.executions[0].data,
-                    timestamp: item.executions[0].timestamp
+                    timestamp: item.executions[0].timestamp,
+                    txHash: `https://gnosisscan.io/tx/${item.executions[0].txHash}`,
                 }
             }
             feed.push(feedItem);
@@ -86,6 +87,8 @@ const Feed: React.FC<FeedProps> = ({ jobs }) => {
     const columns = [
         { key: 'id', header: 'ID' },
         { key: 'creator', header: 'Creator', truncate: true },
+        // { key: 'paymentPerExecution', header: 'Rewards Per Execution' },
+        // { key: 'rewardAmount', header: 'Total Rewards' },
         // { key: 'extractor', header: 'Extractor', truncate: true },
         // { key: 'pricePerExecution', header: 'Price Per Execution' },
         // { key: 'maxExecutions', header: 'Max Executions' },
@@ -93,6 +96,7 @@ const Feed: React.FC<FeedProps> = ({ jobs }) => {
         // { key: 'executionInterval', header: 'Execution Interval' },
         // { key: 'executions', header: 'Executions' }
         { key: 'data', header: 'Data' },
+        { key: 'txHash', header: 'TXN Hash', feedIcon: true },
         { key: 'timestamp', header: 'Timestamp', timestamp: true },
         { key: 'historyIcon', header: 'History', history: true }
     ];

@@ -37,7 +37,12 @@ const StyledTd = styled.td`
 
 const ResponsiveTable: React.FC<TableProps> = ({ data, columns }) => {
     const navigate = useNavigate();
-    const goToHistory = (e: any, id: string) => {
+
+    const goToHistory = (e: any, id: string, row?: any) => {
+        if (row?.txHash) {
+            window.open(row.txHash, "_blank");
+            return;
+        }
         const path = `/history/${id}`;
         navigate(path);
     }
@@ -62,7 +67,7 @@ const ResponsiveTable: React.FC<TableProps> = ({ data, columns }) => {
                                 <StyledTd key={column.key}>
                                     {column.feedIcon
                                         ?
-                                        <span className='go-to-history' onClick={(e) => goToHistory(e, row['id'])}>
+                                        <span className='go-to-history' onClick={(e) => goToHistory(e, row['id'], row)}>
                                             <ArrowIcon />
                                         </span>
                                         :

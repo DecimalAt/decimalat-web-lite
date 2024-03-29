@@ -16,10 +16,15 @@ import { gql } from '@apollo/client';
 
 const GET_JOB_LIST_QUERY = gql`
 {
-    jobs {
+  jobs(orderBy:id, orderDirection:desc) {
         id
         creator
-      }
+        image {
+          id
+        }
+        paymentPerExecution
+        rewardAmount
+    }
 }
 `;
 

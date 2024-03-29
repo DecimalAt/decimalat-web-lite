@@ -46,8 +46,10 @@ const History: React.FC = () => {
 
     let feed: any[] = [];
     if (data && data.jobs && data.jobs[0] && data.jobs[0].executions) {
-        data.jobs[0].executions.forEach((item: any) => {
+        data.jobs[0].executions.forEach((item: any, i) => {
+            // item.id = id?.substring(0, id.length - 4);
             let feedItem = item;
+            // feedItem.num = i + 1;
             // if (item.executions.length > 0) {
             //     feedItem = {
             //         ...item,
@@ -62,7 +64,7 @@ const History: React.FC = () => {
     }
 
     const columns = [
-        { key: 'executionNumber', header: 'Execution Number' },
+        { key: 'id', header: 'Execution Number', truncate: true },
         { key: 'data', header: 'Data' },
         { key: 'timestamp', header: 'Timestamp', timestamp: true }
     ];
@@ -70,7 +72,7 @@ const History: React.FC = () => {
     return (
         <div className='content-page'>
             <div className='historyHeader'>
-                <h2>Feed History for : {id}</h2>
+                <h2>Feed History for Job: {id}</h2>
                 <div className='backButton'>
                     <BackButton />
                 </div>
