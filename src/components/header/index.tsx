@@ -40,10 +40,10 @@ const Header: React.FC<HeaderProps> = ({ toggleTheme }) => {
   const [theme, setTheme] = useState('Light');
 
   const navItems = [
-    // { label: "Home", path: "/" },
-    { label: "Jobs", path: "/" },
+    { label: "Intent", path: "/" },
+    { label: "Jobs", path: "/jobs" },
     { label: "Feed", path: "/feed" },
-    { label: "New Intent", path: "/create" },
+    // { label: "New Intent", path: "/create" },
   ];
 
   const toggleTheTheme = (theme: string) => {

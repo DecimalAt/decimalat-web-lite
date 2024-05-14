@@ -1,0 +1,15 @@
+.app-cards-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+  }
+  
+  @media (max-width: 768px) {
+    .app-cards-container {
+      flex-direction: column;
+      align-items: center;
+    }
+  }
+  
+  

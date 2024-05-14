@@ -20,6 +20,7 @@ interface Job {
     executionInterval: string;
 }
 
+
 interface JobsProps {
     jobs?: Job[];
 }
@@ -31,6 +32,7 @@ const filterOptions: Record<string, DocumentNode> = {
 
 const Jobs: React.FC<JobsProps> = ({ jobs }) => {
     const account = useAccount();
+    console.log("account",account.address)
     const [filter, setFilter] = useState<string>('All');
     // const [currentAddress, setCurrentAddress] = useState<string>(account.address || '');
 
@@ -41,6 +43,7 @@ const Jobs: React.FC<JobsProps> = ({ jobs }) => {
     const { loading, error, data } = useQuery(filterOptions[filter], {
         variables: { address: account.address },
     });
+
 
     if (filter === 'My' && !account.address) {
         return (

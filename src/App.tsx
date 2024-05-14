@@ -31,9 +31,12 @@ import Footer from './components/footer';
 
 import Home from './pages/home';
 import Jobs from './pages/jobs';
+import Intent from './pages/newIntent';
 import Feed from './pages/feed';
 import History from './pages/history';
 import CreateJob from './pages/createIntent';
+import CreateApp from './pages/createApp';
+import NotFound from './pages/404';
 
 import './App.css';
 
@@ -76,11 +79,15 @@ const App: React.FC = () => {
                   {/* <SidePanel /> */}
                   <main className="main-content">
                     <Routes>
+                      <Route path='/' element={<Intent/>}/>
                       {/* <Route path="/" element={<Home />} /> */}
                       <Route path="/feed" element={<Feed />} />
                       <Route path="/history/:id" element={<History />} />
-                      <Route path="/" element={<Jobs />} />
-                      <Route path="/create" element={<CreateJob />} />
+                      <Route path="/jobs" element={<Jobs/>}/>
+                      <Route path='/create/:appName' element={<CreateApp/>}/>
+                      <Route path="*" element={<NotFound/>}/>
+                      {/* // <Route path="/" element={<Jobs />} /> */}
+                      {/* <Route path="/create" element={<CreateJob />} /> */}
                     </Routes>
                   </main>
                 </Router>
